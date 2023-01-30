@@ -1,0 +1,37 @@
+#load libraries
+from machine import Pin, PWM, ADC
+from utime import sleep_ms
+
+in1 = Pin(15, Pin.OUT)
+
+
+speed = PWM(Pin(14))
+speed.freq(1000)
+pot = ADC(26) #Middle pin in potentiometer
+
+#create 'objects' for our actual switch
+toggle_sw = Pin(12, Pin.IN, Pin.PULL_DOWN)
+
+def map(x, in_min, in_max, out_min, out_max): # Maps two ranges together
+    return int((x-in_min)*(out_max-out_min)/(in_max-in_min)+out_min)
+
+    
+#polling method using compare to handle an ON-OFF switch
+while True: #run endless loop
+    speed.duty_u16(pot.read_u16())
+    
+    pot_value = pot.read_u16()
+    percentage = map(pot_value, 288, 65535, 0, 100)
+    
+    speed_value = map(percentage, 0, 100, 0, 65535)
+    print("Percentage", percentage, "Raw", pot_value, "led_value", speed_value)
+    speed.duty_u16(speed_value)
+    sleep_ms(100)
+    
+    if toggle_sw.value() == True: #if input GP12 is HIGH
+        in1.value(1)
+        #in2.value(0)
+        
+    elif toggle_sw.value() == False: #if input GP12 is LOW
+       in1.value(1)
+       #in2.value(0)
